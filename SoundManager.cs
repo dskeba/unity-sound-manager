@@ -19,6 +19,7 @@ public class SoundManager : Singleton<SoundManager>
 
 	public void Awake()
 	{
+		base.Awake();
 		masterMixer = Resources.Load<AudioMixer>("Mixers/MasterMixer");
 		FindAudioMixerGroups();
 	}
@@ -93,33 +94,27 @@ public class SoundManager : Singleton<SoundManager>
 
 	private AudioSource GetAudioSource(AudioClip audioClip)
 	{
-		if (!audioSources.ContainsKey(audioClip.name))
-		{
-			AudioSource audioSource = gameObject.AddComponent<AudioSource>();
-			audioSources.Add(audioClip.name, audioSource);
-			return audioSource;
-		}
-		return audioSources[audioClip.name];
+		return GetAudioSource(audioClip.name);
 	}
 
-	public AudioSource Play(MixerGroup group, string resource, float volume = 1f)
+	public AudioSource Play(MixerGroup group, string resource, float volume = 1f, bool loop = false)
 	{
 		AudioClip clip = Resources.Load<AudioClip>(resource);
-		AudioSource audioSource = GetAudioSource(resource);
-		audioSource.outputAudioMixerGroup = audioMixerGroups[group];
-		audioSource.PlayOneShot(clip, volume);
-		return audioSource;
+		return Play(group, clip, volume, loop);
 	}
 
-    public AudioSource Play(MixerGroup group, AudioClip clip, float volume = 1f)
+    public AudioSource Play(MixerGroup group, AudioClip clip, float volume = 1f, bool loop = false)
     {
 		AudioSource audioSource = GetAudioSource(clip);
 		audioSource.outputAudioMixerGroup = audioMixerGroups[group];
-		audioSource.PlayOneShot(clip, volume);
+		audioSource.loop = loop;
+		//audioSource.PlayOneShot(clip, volume);
+		audioSource.clip = clip;
+		audioSource.Play();
 		return audioSource;
 	}
 
-	public void PlayClipAtPoint(MixerGroup group, AudioClip clip, Vector3 position, float volume = 1f)
+	public void PlayClipAtPoint(MixerGroup group, AudioClip clip, Vector3 position, float volume = 1f, bool loop = false)
     {
 		GameObject gameObject = new GameObject("One shot audio");
 		gameObject.transform.position = position;
@@ -128,6 +123,7 @@ public class SoundManager : Singleton<SoundManager>
 		audioSource.clip = clip;
 		audioSource.spatialBlend = 1f;
 		audioSource.volume = volume;
+		audioSource.loop = loop;
 		audioSource.Play();
 		Object.Destroy(gameObject, clip.length * (Time.timeScale < 0.009999999776482582 ? 0.01f : Time.timeScale));
 	}
